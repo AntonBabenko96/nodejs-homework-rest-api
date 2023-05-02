@@ -1,5 +1,9 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const gravatar = require("gravatar");
+const fs = require("fs/promises");
+const path = require("path");
+const resizeAvatar = require("../utils/resizeAvatar");
 
 const { User } = require("../models/user");
 
@@ -16,15 +20,18 @@ const register = async (req, res) => {
     throw HttpError(409, "Email in use");
   }
 
+  const avatarURL = gravatar.url(email, { protocol: "https" });
   const hashPassword = await bcrypt.hash(password, 10);
-  console.log(hashPassword);
-
-  const newUser = await User.create({ ...req.body, password: hashPassword });
+  const newUser = await User.create({
+    ...req.body,
+    password: hashPassword,
+    avatarURL,
+  });
 
   res.status(201).json({
     user: {
-      name: newUser.name,
       email: newUser.email,
+      subscription: newUser.subscription,
     },
   });
 };
@@ -70,9 +77,26 @@ const logout = async (req, res) => {
   res.status(204).json();
 };
 
+const avatarsDir = path.resolve("public", "avatars");
+
+const updateAvatar = async (req, res) => {
+  if (!req.file) {
+    throw HttpError(404, "File is required");
+  }
+  const { path: temporaryPath, filename } = req.file;
+  const { _id } = req.user;
+  await resizeAvatar(temporaryPath);
+  const newPath = path.join(avatarsDir, filename);
+  await fs.rename(temporaryPath, newPath);
+  const avatarURL = path.join("avatars", filename);
+  await User.findByIdAndUpdate(_id, { avatarURL });
+  res.json({ avatarURL });
+};
+
 module.exports = {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   getCurrent: ctrlWrapper(getCurrent),
   logout: ctrlWrapper(logout),
+  updateAvatar: ctrlWrapper(updateAvatar),
 };

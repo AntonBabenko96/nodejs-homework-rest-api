@@ -27,6 +27,14 @@ const userSchema = new Schema(
       type: String,
       default: null,
     },
+    subscription: {
+      type: String,
+      enum: ["starter", "pro", "business"],
+      default: "starter",
+    },
+    avatarURL: {
+      type: String,
+    },
   },
   { versionKey: false }
 );

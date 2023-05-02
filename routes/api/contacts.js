@@ -2,7 +2,7 @@ const express = require("express");
 
 const contactsController = require("../../controllers/contacts-controllers");
 
-const { isValidId, authenticate } = require("../../middlewares");
+const { isValidId, authenticate, upload } = require("../../middlewares");
 
 const {
   validateAddContact,
