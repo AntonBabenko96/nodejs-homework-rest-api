@@ -22,6 +22,7 @@ const validateUpdateContact = (schema) => {
   };
   return func;
 };
+
 const validateUpdateFavoriteContact = (schema) => {
   const func = (req, res, next) => {
     const { error } = schema.validate(req.body);
@@ -33,8 +34,26 @@ const validateUpdateFavoriteContact = (schema) => {
   return func;
 };
 
+const validateRegister = (schema) => {
+  const func = (req, res, next) => {
+    const { error } = schema.validate(req.body);
+    if (error) {
+      const value = error.details[0];
+      const message =
+        value.path[0] === "email"
+          ? "Email must be a valid email"
+          : value.message;
+      next(HttpError(400, message));
+    }
+    next();
+  };
+
+  return func;
+};
+
 module.exports = {
   validateAddContact,
   validateUpdateContact,
   validateUpdateFavoriteContact,
+  validateRegister,
 };
